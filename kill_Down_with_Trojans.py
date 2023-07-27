@@ -26,17 +26,58 @@ def print_tile_data(tile_types, tile_values):
 
 
 def DP(n, H, tile_types, tile_values):
-    # TODO
-    # Placeholder function - implement your logic here
-    # Your code to check whether it is possible to reach the bottom-right
-    # corner without running out of HP should go here.
-    # You should use dynamic programming to solve the problem.
-    # Return True if possible, False otherwise.
+    memo = np.full((n, n, 3), -1)
+    return DP_helper(n, H, tile_types, tile_values, 0, 0, False, False, memo)
 
-    # By defualt we return False
-    # TODO you should change this
-    res = False
-    return res
+
+def DP_helper(n, H, tile_types, tile_values, i, j, prev_protect, prev_mult, memo):
+    # base cases
+    # if health goes below 0, invalid path
+    if H < 0:
+        return False
+    # if reached bottom right corner without dying, return true
+    if (i == n and j == n-1) or (i == n-1 and j == n):
+        return True
+    # if out of bounds
+    if i == n or j == n:
+        return False
+    #check memo
+    
+    new_health = H
+    protect_status = prev_protect
+    mult_status = prev_mult
+
+    #if landed on damage tile
+    if tile_types[i][j] == 0:
+        #if protected
+        if prev_protect:
+            protect_status = False
+        else:
+            new_health -= tile_values[i][j]
+    #if landed on healing tile
+    elif tile_types[i][j] == 1:
+        #if have multiplier token
+        if prev_mult:
+            new_health += tile_values[i][j]*2
+            mult_status = False
+        else:
+            new_health += tile_values[i][j]
+    #if landed on protection square
+    elif tile_types[i][j] == 2:
+        protect_status = True
+    #if landed on multiplier square
+    elif tile_types[i][j] == 3:
+        mult_status = True
+
+    print(str(i) + ", " + str(j) + ": Health: " + str(new_health) + " Protect status: " + str(protect_status) + " mult status: " + str(mult_status))
+    #test going right
+    res1 = DP_helper(n, new_health, tile_types, tile_values, i, j+1, protect_status, mult_status)
+    #test going down
+    res2 = DP_helper(n, new_health, tile_types, tile_values, i+1, j, protect_status, mult_status)
+
+    return res1 or res2
+
+    
 
 
 def write_output_file(output_file_name, result):

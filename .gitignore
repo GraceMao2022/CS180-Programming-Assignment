@@ -25,6 +25,7 @@ venv/
 env/
 *.venv/
 *.env/
+CS180venv/
 
 # IDE and editor specific files (adjust as needed)
 .vscode/
