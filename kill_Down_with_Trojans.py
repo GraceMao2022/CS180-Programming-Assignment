@@ -26,57 +26,81 @@ def print_tile_data(tile_types, tile_values):
 
 
 def DP(n, H, tile_types, tile_values):
-    memo = np.full((n, n, 3), -1)
-    return DP_helper(n, H, tile_types, tile_values, 0, 0, False, False, memo)
+    memo = np.full((n, n, 2, 2), np.nan)
+    if DP_helper(n, tile_types, tile_values, 0, 0, 0, 0, memo) <= H:
+        return True
+    print(memo)
+    return False
 
-
-def DP_helper(n, H, tile_types, tile_values, i, j, prev_protect, prev_mult, memo):
+def DP_helper(n, tile_types, tile_values, i, j, prev_protect, prev_mult, memo):
     # base cases
-    # if health goes below 0, invalid path
-    if H < 0:
-        return False
     # if reached bottom right corner without dying, return true
     if (i == n and j == n-1) or (i == n-1 and j == n):
-        return True
+        return 0
     # if out of bounds
     if i == n or j == n:
-        return False
+        return np.inf
     #check memo
+    if not np.isnan(memo[i][j][prev_protect][prev_mult]):
+        return memo[i][j][prev_protect][prev_mult]
     
-    new_health = H
-    protect_status = prev_protect
-    mult_status = prev_mult
+    res1 = np.inf
+    res2 = np.inf
+    res3 = np.inf
+    res4 = np.inf
 
-    #if landed on damage tile
-    if tile_types[i][j] == 0:
+    #if landed on protection square
+    if tile_types[i][j] == 2:
+        #protect_status = True
+        #test going right
+        res1 = DP_helper(n, tile_types, tile_values, i, j+1, 1, prev_mult, memo)
+        #test going down
+        res2 = DP_helper(n, tile_types, tile_values, i+1, j, 1, prev_mult, memo)
+    #if landed on multiplier square
+    elif tile_types[i][j] == 3:
+        #test going right
+        res1 = DP_helper(n, tile_types, tile_values, i, j+1, prev_protect, 1, memo)
+        #test going down
+        res2 = DP_helper(n, tile_types, tile_values, i+1, j, prev_protect, 1, memo)
+     #if landed on damage tile
+    elif tile_types[i][j] == 0:
         #if protected
         if prev_protect:
-            protect_status = False
+            #test going right and protect on current tile
+            res1 = DP_helper(n, tile_types, tile_values, i, j+1, 0, prev_mult, memo)
+            #test going down and protect on current tile
+            res2 = DP_helper(n, tile_types, tile_values, i+1, j, 0, prev_mult, memo)
+            #test going right and dont use protect
+            res3 = DP_helper(n, tile_types, tile_values, i, j+1, prev_protect, prev_mult, memo) + tile_values[i][j]
+            #test going down and dont use protect
+            res4 = DP_helper(n, tile_types, tile_values, i+1, j, prev_protect, prev_mult, memo) + tile_values[i][j]
         else:
-            new_health -= tile_values[i][j]
+            #new_health -= tile_values[i][j]
+            #test going right and not protecting
+            res3 = DP_helper(n, tile_types, tile_values, i, j+1, prev_protect, prev_mult, memo) + tile_values[i][j]
+            #test going down and not protecting
+            res4 = DP_helper(n, tile_types, tile_values, i+1, j, prev_protect, prev_mult, memo) + tile_values[i][j]
     #if landed on healing tile
     elif tile_types[i][j] == 1:
         #if have multiplier token
         if prev_mult:
-            new_health += tile_values[i][j]*2
-            mult_status = False
+            #test going right and multiplier on current tile
+            res1 = DP_helper(n, tile_types, tile_values, i, j+1, prev_protect, 0, memo) - tile_values[i][j]*2
+            #test going down and multiplier on current tile
+            res2 = DP_helper(n, tile_types, tile_values, i+1, j, prev_protect, 0, memo) - tile_values[i][j]*2
+            #test going right and dont use multiplier
+            res3 = DP_helper(n, tile_types, tile_values, i, j+1, prev_protect, prev_mult, memo) - tile_values[i][j]
+            #test going down and dont use multiplier
+            res4 = DP_helper(n, tile_types, tile_values, i+1, j, prev_protect, prev_mult, memo) - tile_values[i][j]        
         else:
-            new_health += tile_values[i][j]
-    #if landed on protection square
-    elif tile_types[i][j] == 2:
-        protect_status = True
-    #if landed on multiplier square
-    elif tile_types[i][j] == 3:
-        mult_status = True
+            #test going right and not use multiplier
+            res3 = DP_helper(n, tile_types, tile_values, i, j+1, prev_protect, prev_mult, memo) - tile_values[i][j]
+            #test going down and not use multiplier
+            res4 = DP_helper(n, tile_types, tile_values, i+1, j, prev_protect, prev_mult, memo) - tile_values[i][j]
 
-    print(str(i) + ", " + str(j) + ": Health: " + str(new_health) + " Protect status: " + str(protect_status) + " mult status: " + str(mult_status))
-    #test going right
-    res1 = DP_helper(n, new_health, tile_types, tile_values, i, j+1, protect_status, mult_status)
-    #test going down
-    res2 = DP_helper(n, new_health, tile_types, tile_values, i+1, j, protect_status, mult_status)
-
-    return res1 or res2
-
+    #store in memo
+    memo[i][j][prev_protect][prev_mult] = min(res1,res2,res3,res4)
+    return memo[i][j][prev_protect][prev_mult]
     
 
 
