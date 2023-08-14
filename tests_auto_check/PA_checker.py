@@ -106,12 +106,12 @@ def run_cpp_tests(test_dir):
 
 def run_grid(test_dir):
     any_correct = False
-    if os.path.exists(test_dir + "/kill_Down_with_Trojans.py"):
-        res_py = run_py_tests(test_dir)
-        any_correct = any_correct or res_py[0]
-    #if os.path.exists(test_dir + "/kill_Down_with_Trojans.cpp"):
-    #    res_c = run_cpp_tests(test_dir)
-    #    any_correct = any_correct or res_c[0]
+    #if os.path.exists(test_dir + "/kill_Down_with_Trojans.py"):
+    #    res_py = run_py_tests(test_dir)
+    #    any_correct = any_correct or res_py[0]
+    if os.path.exists(test_dir + "/kill_Down_with_Trojans.cpp"):
+        res_c = run_cpp_tests(test_dir)
+        any_correct = any_correct or res_c[0]
 
         if any_correct:
             print("At least one correct solution found.")
